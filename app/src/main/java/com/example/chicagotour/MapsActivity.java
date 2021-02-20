@@ -10,7 +10,10 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.location.Geocoder;
+import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
@@ -19,7 +22,14 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.chicagotour.fences.FenceManager;
 import com.example.chicagotour.fences.FencesDownloader;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -28,6 +38,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.chicagotour.databinding.ActivityMapsBinding;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 
@@ -39,8 +50,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int LOC_COMBO_REQUEST = 111;
     private static final int LOC_ONLY_PERM_REQUEST = 222;
     private static final int BGLOC_ONLY_PERM_REQUEST = 333;
+    private static final int ACCURACY_REQUEST = 444;
     private static final String TAG = "MapsAcitvity";
     private TextView addressTxt;
+    private FenceManager fenceManager;
+    private Geocoder geocoder;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,24 +67,84 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         addressTxt = findViewById(R.id.addressTxt);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        fenceManager = new FenceManager(this);
+        checkLocationAccuracy();
+        geocoder = new Geocoder(this);
+
 
         if(checkPermission()){
             Log.d(TAG, "checkPermission: GRANTED");
             Toast.makeText(this, "GRANTED!!", Toast.LENGTH_SHORT).show();
         }
 
-        new Thread(new FencesDownloader()).start();
+       // new Thread(new FencesDownloader()).start();
 
     }
+
+    public GoogleMap getMap() {
+        return mMap;
+    }
+
+    public void initMap() {
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        }
+    }
+
+
+    private void checkLocationAccuracy() {
+
+        Log.d(TAG, "checkLocationAccuracy: ");
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+
+        task.addOnSuccessListener(this, locationSettingsResponse -> {
+            Log.d(TAG, "onSuccess: High Accuracy Already Present");
+            initMap();
+        });
+
+        task.addOnFailureListener(this, e -> {
+            if (e instanceof ResolvableApiException) {
+                try {
+                    ResolvableApiException resolvable = (ResolvableApiException) e;
+                    resolvable.startResolutionForResult(MapsActivity.this, ACCURACY_REQUEST);
+                } catch (IntentSender.SendIntentException sendEx) {
+                    sendEx.printStackTrace();
+                }
+            }
+        });
+
+    }
+
+
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.addMarker(new MarkerOptions().alpha(0.5f).position(new LatLng(41.920897, -87.646056)).title("My Origin"));
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+      //  mMap.addMarker(new MarkerOptions().alpha(0.5f).position(new LatLng(41.920897, -87.646056)).title("My Origin"));
+        if (checkPermission()) {
+            setupLocationListener();
+        }
     }
+
+    private void setupLocationListener() {
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        locationListener = new LocListener(this);
+
+        if (checkPermission() && locationManager != null)
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10, locationListener);
+    }
+
 
     private boolean checkPermission() {
 
@@ -121,6 +197,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
         }
+    }
+
+    public void updateLocation(Location location) {
+
     }
 
     @Override

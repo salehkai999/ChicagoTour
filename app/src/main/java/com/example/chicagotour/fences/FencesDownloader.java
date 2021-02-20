@@ -1,4 +1,4 @@
-package com.example.chicagotour.fences;
+    package com.example.chicagotour.fences;
 
 import android.location.Geocoder;
 import android.util.Log;
@@ -14,11 +14,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 
-public class FencesDownloader implements Runnable {
+    public class FencesDownloader implements Runnable {
 
     private static final String TAG = "FencesDownloader";
     private static final String URL = "http://www.christopherhield.com/data/WalkingTourContent.json";
+    private final ArrayList<FenceData> fencesList = new ArrayList<>();
     private Geocoder geocoder;
     private  FenceManager fenceManager;
 
@@ -95,10 +97,12 @@ public class FencesDownloader implements Runnable {
                 fData.setImage(obj.getString("image"));
                 fData.setColor(obj.getString("fenceColor"));
                 Log.d(TAG, "processData: "+fData.toString());
+                fencesList.add(fData);
             }
+            fenceManager.addFences(fencesList);
         }
         catch (Exception e){
-
+            e.printStackTrace();
         }
 
     }
