@@ -12,6 +12,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
@@ -34,13 +38,20 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.chicagotour.databinding.ActivityMapsBinding;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.RoundCap;
 import com.google.android.gms.tasks.Task;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -57,6 +68,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Geocoder geocoder;
     private LocationManager locationManager;
     private LocationListener locationListener;
+    private Polyline llHistoryPolyline;
+    private Marker stickMarker;
+    private final ArrayList<LatLng> latLonHistory = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +80,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(binding.getRoot());
 
         addressTxt = findViewById(R.id.addressTxt);
-
         fenceManager = new FenceManager(this);
         checkLocationAccuracy();
         geocoder = new Geocoder(this);
@@ -129,7 +142,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setZoomControlsEnabled(true);
-      //  mMap.addMarker(new MarkerOptions().alpha(0.5f).position(new LatLng(41.920897, -87.646056)).title("My Origin"));
+        mMap.addMarker(new MarkerOptions().alpha(0.5f).position(new LatLng(41.920897, -87.646056)).title("My Origin"));
         if (checkPermission()) {
             setupLocationListener();
         }
@@ -200,7 +213,67 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void updateLocation(Location location) {
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        latLonHistory.add(latLng); // Add the LL to our location history
 
+        try {
+            List<Address> addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
+            Address address = addresses.get(0);
+            addressTxt.setText(address.getAddressLine(0));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            addressTxt.setText("");
+        }
+
+
+        if (llHistoryPolyline != null) {
+            llHistoryPolyline.remove(); // Remove old polyline
+        }
+
+        if (latLonHistory.size() == 1) { // First update
+            mMap.addMarker(new MarkerOptions().alpha(0.5f).position(latLng).title("My Origin"));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16.0f));
+            return;
+        }
+
+        if (latLonHistory.size() > 1) { // Second (or more) update
+            PolylineOptions polylineOptions = new PolylineOptions();
+
+            for (LatLng ll : latLonHistory) {
+                polylineOptions.add(ll);
+            }
+            llHistoryPolyline = mMap.addPolyline(polylineOptions);
+            llHistoryPolyline.setEndCap(new RoundCap());
+            llHistoryPolyline.setWidth(8);
+            llHistoryPolyline.setColor(Color.GREEN);
+
+
+            float r = getRadius();
+            if (r > 0) {
+                Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.walker_right);
+                Bitmap resized = Bitmap.createScaledBitmap(icon, (int) r, (int) r, false);
+
+                BitmapDescriptor iconBitmap = BitmapDescriptorFactory.fromBitmap(resized);
+
+                MarkerOptions options = new MarkerOptions();
+                options.position(latLng);
+                options.icon(iconBitmap);
+                options.rotation(location.getBearing());
+
+                if (stickMarker != null) {
+                    stickMarker.remove();
+                }
+
+                stickMarker = mMap.addMarker(options);
+            }
+        }
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16.0f));
+    }
+
+    private float getRadius() {
+        float z = mMap.getCameraPosition().zoom;
+        return 15f * z - 145f;
     }
 
     @Override

@@ -21,9 +21,9 @@
         android:id="@+id/checkBox"
         android:layout_width="wrap_content"
         android:layout_height="44dp"
+        android:layout_marginStart="15dp"
         android:layout_marginTop="5dp"
         android:text="CheckBox"
-        map:layout_constraintEnd_toStartOf="@+id/addressTxt"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toBottomOf="@+id/addressTxt" />
 
@@ -32,9 +32,9 @@
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:layout_marginTop="5dp"
+        android:layout_marginEnd="15dp"
         android:text="CheckBox"
         map:layout_constraintEnd_toEndOf="parent"
-        map:layout_constraintStart_toEndOf="@+id/addressTxt"
         map:layout_constraintTop_toBottomOf="@+id/addressTxt" />
 
     <TextView
@@ -66,4 +66,5 @@
         map:layout_constraintEnd_toEndOf="@+id/checkBox2"
         map:layout_constraintStart_toStartOf="@+id/checkBox2"
         map:layout_constraintTop_toBottomOf="@+id/checkBox2" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
