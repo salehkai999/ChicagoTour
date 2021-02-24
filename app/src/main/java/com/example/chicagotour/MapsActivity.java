@@ -15,6 +15,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -71,6 +72,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Polyline llHistoryPolyline;
     private Marker stickMarker;
     private final ArrayList<LatLng> latLonHistory = new ArrayList<>();
+    private Typeface customFont;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,16 +83,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(binding.getRoot());
 
         addressTxt = findViewById(R.id.addressTxt);
-        fenceManager = new FenceManager(this);
-        checkLocationAccuracy();
-        geocoder = new Geocoder(this);
 
+        checkLocationAccuracy();
+
+        customFont = Typeface.createFromAsset(getAssets(), "fonts/Acme-Regular.ttf");
 
         if(checkPermission()){
             Log.d(TAG, "checkPermission: GRANTED");
             Toast.makeText(this, "GRANTED!!", Toast.LENGTH_SHORT).show();
         }
-
+        addressTxt.setTypeface(customFont);
        // new Thread(new FencesDownloader()).start();
 
     }
@@ -103,6 +106,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
+        }
+        try {
+            fenceManager = new FenceManager(this);
+            geocoder = new Geocoder(this);}
+        catch (Exception e){
+            e.printStackTrace();
         }
     }
 

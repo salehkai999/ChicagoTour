@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#4CAF50"
-    android:backgroundTint="#4CAF50"
     tools:context=".DetailsActivity">
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#4CAF50"
+        android:backgroundTint="#4CAF50">
     <TextView
         android:id="@+id/buildingName"
         android:layout_width="wrap_content"
@@ -40,15 +43,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buildingImg" />
 
-    <TextView
-        android:id="@+id/detailsTxt"
-        android:layout_width="369dp"
-        android:layout_height="432dp"
-        android:layout_marginTop="15dp"
-        android:background="#D81DD625"
-        android:text="TextView"
-        android:textColor="#FFFFFF"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/locTxt" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/detailsTxt"
+            android:layout_width="383dp"
+            android:layout_height="449dp"
+            android:layout_marginTop="15dp"
+            android:background="#D81DD625"
+            android:scrollbars="vertical"
+            android:textColor="#FFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/locTxt" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
