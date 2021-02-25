@@ -207,7 +207,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(16));
         mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.setBuildingsEnabled(true);
+        mMap.getUiSettings().setCompassEnabled(true);
+        mMap.getUiSettings().setRotateGesturesEnabled(false);
         //mMap.addMarker(new MarkerOptions().alpha(0.5f).position(new LatLng(41.920897, -87.646056)).title("My Origin"));
         if (checkPermission()) {
             setupLocationListener();

@@ -1,5 +1,6 @@
 package com.example.chicagotour;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Typeface;
@@ -26,6 +27,14 @@ public class DetailsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
 
+
+        ActionBar actionBar = getSupportActionBar();
+        if(actionBar != null){
+            actionBar.setHomeAsUpIndicator(R.drawable.home_image);
+            actionBar.setHomeButtonEnabled(false);
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle("");
+        }
         name = findViewById(R.id.buildingName);
         location = findViewById(R.id.locTxt);
         description = findViewById(R.id.detailsTxt);
