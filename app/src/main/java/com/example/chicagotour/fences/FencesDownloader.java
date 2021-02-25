@@ -4,6 +4,7 @@ import android.location.Geocoder;
 import android.util.Log;
 
 import com.example.chicagotour.MapsActivity;
+import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
     private static final String TAG = "FencesDownloader";
     private static final String URL = "http://www.christopherhield.com/data/WalkingTourContent.json";
     private final ArrayList<FenceData> fencesList = new ArrayList<>();
+    private final ArrayList<LatLng> pathList = new ArrayList<>();
     private Geocoder geocoder;
     private  FenceManager fenceManager;
 
@@ -99,7 +101,18 @@ import java.util.ArrayList;
                 Log.d(TAG, "processData: "+fData.toString());
                 fencesList.add(fData);
             }
+            JSONArray path = jsonObject.getJSONArray("path");
+            for(int i=0;i<path.length();i++){
+                String lnglat = path.get(i).toString();
+                String[] lnlatData = lnglat.split(",");
+             //   Log.d(TAG, "processData: "+lnlatData[0]);
+              //  Log.d(TAG, "processData: "+lnlatData[1]);
+                LatLng latLng = new LatLng(Double.parseDouble(lnlatData[1]),Double.parseDouble(lnlatData[0]));
+                pathList.add(latLng);
+                Log.d(TAG, "processData: "+latLng.toString());
+            }
             fenceManager.addFences(fencesList);
+            fenceManager.addPath(pathList);
         }
         catch (Exception e){
             e.printStackTrace();

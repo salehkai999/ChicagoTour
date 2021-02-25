@@ -24,6 +24,8 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -73,6 +75,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Marker stickMarker;
     private final ArrayList<LatLng> latLonHistory = new ArrayList<>();
     private Typeface customFont;
+    private boolean addressFlag = true;
+    private boolean pathFlag = true;
 
 
     @Override
@@ -145,13 +149,66 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    public void showFences(View v) {
+        CheckBox cb = (CheckBox) v;
+
+        if (cb.isChecked()) {
+            fenceManager.drawFences();
+        } else {
+            fenceManager.eraseFences();
+        }
+    }
+
+    public void showAddress(View v) {
+        CheckBox cb = (CheckBox) v;
+        if(!cb.isChecked()){
+            addressFlag = false;
+            addressTxt.setText("");
+        }
+        else
+            addressFlag = true;
+    }
+
+    public void showPath(View v){
+        CheckBox cb = (CheckBox) v;
+        if (cb.isChecked()) {
+            fenceManager.drawPath();
+        } else {
+            fenceManager.erasePath();
+        }
+    }
+
+    public void showTravel(View v){
+        CheckBox cb = (CheckBox) v;
+        if(llHistoryPolyline != null) {
+            if (cb.isChecked()) {
+               llHistoryPolyline.setVisible(true);
+          } else {
+             llHistoryPolyline.setVisible(false);
+            }    }
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (locationManager != null && locationListener != null)
+            locationManager.removeUpdates(locationListener);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (checkPermission() && locationManager != null && locationListener != null)
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 10, locationListener);
+    }
 
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setZoomControlsEnabled(true);
-        mMap.addMarker(new MarkerOptions().alpha(0.5f).position(new LatLng(41.920897, -87.646056)).title("My Origin"));
+        //mMap.addMarker(new MarkerOptions().alpha(0.5f).position(new LatLng(41.920897, -87.646056)).title("My Origin"));
         if (checkPermission()) {
             setupLocationListener();
         }
@@ -169,8 +226,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private boolean checkPermission() {
-
-        // If R or greater, need to ask for these separately
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -223,12 +278,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void updateLocation(Location location) {
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        latLonHistory.add(latLng); // Add the LL to our location history
+        latLonHistory.add(latLng);
 
         try {
             List<Address> addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
             Address address = addresses.get(0);
-            addressTxt.setText(address.getAddressLine(0));
+            if(addressFlag)
+                addressTxt.setText(address.getAddressLine(0));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -237,10 +293,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         if (llHistoryPolyline != null) {
-            llHistoryPolyline.remove(); // Remove old polyline
+            llHistoryPolyline.remove();
         }
 
-        if (latLonHistory.size() == 1) { // First update
+        if (latLonHistory.size() == 1) {
             mMap.addMarker(new MarkerOptions().alpha(0.5f).position(latLng).title("My Origin"));
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16.0f));
             return;
@@ -252,10 +308,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             for (LatLng ll : latLonHistory) {
                 polylineOptions.add(ll);
             }
-            llHistoryPolyline = mMap.addPolyline(polylineOptions);
-            llHistoryPolyline.setEndCap(new RoundCap());
-            llHistoryPolyline.setWidth(8);
-            llHistoryPolyline.setColor(Color.GREEN);
+
+            if(llHistoryPolyline == null){
+                llHistoryPolyline = mMap.addPolyline(polylineOptions);
+                llHistoryPolyline.setEndCap(new RoundCap());
+                llHistoryPolyline.setWidth(8);
+                llHistoryPolyline.setColor(Color.GREEN);
+            }
+            else if(llHistoryPolyline.isVisible()) {
+                llHistoryPolyline = mMap.addPolyline(polylineOptions);
+                llHistoryPolyline.setEndCap(new RoundCap());
+                llHistoryPolyline.setWidth(8);
+                llHistoryPolyline.setColor(Color.GREEN);
+            }
+
 
 
             float r = getRadius();
@@ -319,7 +385,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (permissions[0].equals(Manifest.permission.ACCESS_BACKGROUND_LOCATION) &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "GRANTED!", Toast.LENGTH_SHORT).show();
-                //determineLocation();
             }
         }
     }

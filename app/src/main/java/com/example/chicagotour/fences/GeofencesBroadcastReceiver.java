@@ -77,10 +77,6 @@ public class GeofencesBroadcastReceiver extends BroadcastReceiver {
             notificationManager.createNotificationChannel(channel);
         }
 
-
-        // You could build a pending intent here to open an activity when the
-        // notification is tapped. Not doing that here though.
-
         Intent resultIntent = new Intent(context.getApplicationContext(), DetailsActivity.class);
         resultIntent.putExtra("DATA", fd);
 
@@ -90,12 +86,12 @@ public class GeofencesBroadcastReceiver extends BroadcastReceiver {
         Notification notification = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
                 .setContentIntent(pi)
                 .setSmallIcon(R.drawable.fence_notif)
-                .setContentTitle(fd.getId() + " (Tap to See Details)") // Bold title
-                .setSubText(fd.getId()) // small text at top left
-                .setContentText(fd.getAddress()) // Detail info
+                .setContentTitle(fd.getId() + " (Tap to See Details)")
+                .setSubText(fd.getId())
+                .setContentText(fd.getAddress())
                 .setVibrate(new long[] {1, 1, 1})
                 .setAutoCancel(true)
-                .setLights(0xff0000ff, 300, 1000) // blue color
+                .setLights(0xff0000ff, 300, 1000)
                 .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
                 .build();
 

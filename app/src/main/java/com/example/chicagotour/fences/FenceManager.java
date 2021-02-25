@@ -21,6 +21,9 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PatternItem;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.RoundCap;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,7 +38,8 @@ public class FenceManager {
     private PendingIntent geofencePendingIntent;
     private final ArrayList<Circle> circles = new ArrayList<>();
     private final List<PatternItem> pattern = Collections.singletonList(new Dot());
-
+    private  ArrayList<LatLng> path = new ArrayList<>();
+    private Polyline pathLine;
 
 
     public FenceManager(final MapsActivity mapsActivity) {
@@ -66,6 +70,33 @@ public class FenceManager {
         }
     }
 
+    public  void drawPath() {
+        try {
+            if(pathLine != null) {
+                if(!pathLine.isVisible()){
+                    pathLine.setVisible(true);
+                    return;
+            }}
+            PolylineOptions polylineOptions = new PolylineOptions();
+            for (LatLng ll : path) {
+                polylineOptions.add(ll);
+            }
+            pathLine = mapsActivity.getMap().addPolyline(polylineOptions);
+            pathLine.setEndCap(new RoundCap());
+            pathLine.setWidth(8);
+            pathLine.setColor(Color.YELLOW);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+
+    }
+
+    public void erasePath(){
+        pathLine.setVisible(false);
+    }
+
     public void eraseFences() {
         for (Circle c : circles)
             c.remove();
@@ -87,6 +118,8 @@ public class FenceManager {
 
         circles.add(c);
     }
+
+
 
     void addFences(ArrayList<FenceData> fences) {
 
@@ -125,6 +158,11 @@ public class FenceManager {
                     });
         }
         mapsActivity.runOnUiThread(this::drawFences);
+    }
+
+    public void addPath(ArrayList<LatLng> pathList){
+        this.path = pathList;
+        mapsActivity.runOnUiThread(this::drawPath);
     }
 
 
